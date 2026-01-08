@@ -1,0 +1,44 @@
+@startuml
+' PlantUML Diagram Example
+' This demonstrates a simple class diagram
+
+title System Architecture Diagram
+
+' Define classes
+class User {
+  -id: String
+  -name: String
+  -email: String
+  +login()
+  +logout()
+  +updateProfile()
+}
+
+class Account {
+  -accountId: String
+  -balance: Double
+  -createdDate: Date
+  +deposit()
+  +withdraw()
+  +getBalance()
+}
+
+class Transaction {
+  -transactionId: String
+  -amount: Double
+  -timestamp: Date
+  -type: String
+  +process()
+  +validate()
+}
+
+' Define relationships
+User "1" -- "0..*" Account : owns
+Account "1" -- "0..*" Transaction : contains
+
+note right of User
+  Users can have multiple accounts
+  and perform various transactions
+end note
+
+@enduml
