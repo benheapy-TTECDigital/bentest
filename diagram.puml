@@ -1,0 +1,172 @@
+@startuml
+' PlantUML Diagram Example
+' This demonstrates a simple class diagram
+
+title System Architecture Diagram
+
+' Define custom colors for stereotypes
+skinparam classBorderColor #000000
+skinparam classBackgroundColor #FFFFFF
+skinparam classArrowColor #000000
+
+' Database Table color
+skinparam class {
+  BackgroundColor<<database>> #87CEEB
+  BackgroundColor<<apiRequest>> #FFD700
+  BackgroundColor<<external>> #FFB6C1
+}
+
+' Define Database Tables
+class Donor <<database>> {
+  -donorId: String
+  -userId: String
+  -donorName: String
+  -donorEmail: String
+  -status: String {active, inactive}
+  +submitDonation()
+  +getDonorInfo()
+  +setStatus()
+}
+
+class User <<database>> {
+  -id: String
+  -name: String
+  -email: String
+  +login()
+  +logout()
+  +updateProfile()
+}
+
+class Transaction <<database>> {
+  -transactionId: String
+  -amount: Double
+  -timestamp: Date
+  -type: String {donation, purchase}
+  -status: String
+  -giftAidEligible: String {yes, no}
+  +process()
+  +validate()
+  +setPending()
+  +checkGiftAidEligibility()
+}
+
+class GiftAid <<database>> {
+  -giftAidId: String
+  -amount: Double
+  -claimDate: Date
+  -status: String
+  +claimGiftAid()
+  +validate()
+  +sendToHMRC()
+}
+
+class Staff <<database>> {
+  -staffId: String
+  -name: String
+  -startDate: Date
+  -status: String {active, inactive}
+  -type: String {Paid, Volunteer}
+  +getStaffInfo()
+  +updateStatus()
+  +getType()
+}
+
+class Onboarding <<database>> {
+  -onboardingId: String
+  -staffId: String
+  -trainingDateRequiredBy: Date
+  -onboardingRequiredBy: Date
+  -startDate: Date
+  -trainingComplete: Boolean
+  +updateTrainingStatus()
+  +getOnboardingInfo()
+  +checkOnboardingProgress()
+}
+
+' Define API Request
+class Request <<apiRequest>> {
+  -requestId: String
+  -giftAidId: String
+  -status: String
+  -createdDate: Date
+  +createRequest()
+  +getStatus()
+  +setRequested()
+}
+
+' Define External API/Gateway
+interface HMRCGateway <<external>> {
+  -gatewayId: String
+  -apiEndpoint: String
+  -apiKey: String
+  +submitRequest()
+  +receiveResponse()
+  +validateRequest()
+}
+
+' Define relationships
+Donor "0..*" -- "1" User : linked to
+Donor "1" -- "0..*" Transaction : submits
+Transaction "1" -- "0..*" GiftAid : requests (if giftAidEligible = yes)
+GiftAid "1" -- "0..*" Request : generates
+Request "0..*" -[#FF6B6B]-> "1" HMRCGateway : sends API request\nwith status requested
+Staff "1" -- "0..*" Onboarding : has
+
+note right of Donor
+  Donor submits a Transaction
+  with type = "donation"
+  Status starts as "pending"
+  Donor status can be active or inactive
+end note
+
+note right of User
+  User profile management
+end note
+
+note right of Transaction
+  When type = "donation"
+  and status = "pending"
+  it awaits processing
+  Type can be donation or purchase
+  If giftAidEligible = yes
+  then GiftAid record is created
+end note
+
+note right of GiftAid
+  A GiftAid is only created
+  if Transaction has
+  giftAidEligible = yes
+end note
+
+note right of Staff
+  Staff members can be
+  either Paid or Volunteer
+  Status can be active or inactive
+end note
+
+note right of Onboarding
+  Tracks staff onboarding progress
+  including training and
+  onboarding completion dates
+end note
+
+note right of Request
+  API Request that sends
+  GiftAid claims to HMRC
+  with status = "requested"
+end note
+
+note right of HMRCGateway
+  External HMRC system
+  Receives and processes
+  GiftAid requests via API
+end note
+
+' Legend/Key
+legend right
+  |<#87CEEB> Database Table |
+  |<#FFD700> API Request |
+  |<#FFB6C1> External System |
+end legend
+
+@enduml
